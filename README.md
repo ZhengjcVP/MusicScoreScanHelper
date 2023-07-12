@@ -12,12 +12,12 @@ Also imported PIL just to change final DPI to 600. This cannot be done with Open
 This is a Python Script that helps you (hopefully) process scanned documents. <br />
 It is intended to process musical scores, which has straight lines indicating horizontal directions.<br />
 It will also work fine for scanned text documents.<br />
-This program has the following process:
-1. Rotating the image according to straight line
-2. Cropping edge outside the page
-3. Despeckling small black and white patches
-4. Fitting into fixed page size
-5. Centering
+This program has the following process:<br />
+1. Rotating the image according to straight line<br />
+2. Cropping edge outside the page<br />
+3. Despeckling small black and white patches<br />
+4. Fitting into fixed page size<br />
+5. Centering<br />
 Each part is put into a separate function in MusicScoreProc.py<br />
 
 Important adjustment you need to make:<br />
