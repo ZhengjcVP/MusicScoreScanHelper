@@ -8,7 +8,7 @@ Special thanks to Flrrr https://github.com/Flrrr?tab=repositories <br />
 for implementing most part of the new despeckle function.<br />
 <br />
 Also imported PIL just to change final DPI to 600. This cannot be done with OpenCV<br />
-
+<br />
 This is a Python Script that helps you (hopefully) process scanned documents. <br />
 It is intended to process musical scores, which has straight lines indicating horizontal directions.<br />
 It will also work fine for scanned text documents.<br />
