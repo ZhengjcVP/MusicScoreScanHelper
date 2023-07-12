@@ -8,10 +8,10 @@ import math
 # Higher Start Resolution decreases runtime
 # Higher Angle Percision increases runtime
 # Please refer to HoughLineP function for more information
-def RotateByStraightLine(img, start_resolution=1, angle_percision=1440):
-    gray = cv.cvtColor(img,cv.COLOR_BGR2GRAY)
-    img = gray
-    edges = cv.Canny(gray,100,150,apertureSize = 3)
+def RotateByStraightLine(img, start_resolution=2, angle_percision=1440):
+    temp_img=cv.resize(img,None, fx=0.5, fy=0.5, 
+                       interpolation=cv.INTER_NEAREST)
+    edges = cv.Canny(temp_img,100,150,apertureSize = 3)
     lines = cv.HoughLinesP(edges,start_resolution,np.pi/angle_percision,
                            100,minLineLength=750,maxLineGap=50)
     angles=[0.0]
@@ -64,73 +64,87 @@ def CropWhite(img, H, W, Mean_Thresh=240, Min_Thresh=120, Step_Size=10):
     while((edge_mean<Mean_Thresh or edge_min<Min_Thresh)
            and x1-x0>W/3 and y1-y0>H/3):
         #Calculate Mean
-        mean_top=np.mean(img[y0,x0:x1])
-        mean_left=np.mean(img[y0:y1,x0])
-        mean_bottom=np.mean(img[y1,x0:x1])
-        mean_right=np.mean(img[y0:y1,x1])
-        edge_mean=min(mean_top,mean_left,mean_bottom,mean_right)
-        #Mean is used for iterating
-        if(edge_mean==mean_top):
-            y0+=Step_Size
-        elif(edge_mean==mean_left):
-            x0+=Step_Size
-        elif(edge_mean==mean_bottom):
-            y1-=Step_Size
-        elif(edge_mean==mean_right):
-            x1-=Step_Size
-        #print(x0,x1,y0,y1,edge_mean)
-
-        #Calculate Minimum. Exit condition
-        min_top=min(img[y0,x0:x1])
-        min_left=min(img[y0:y1,x0])
-        min_bottom=min(img[y1,x0:x1])
-        min_right=min(img[y0:y1,x1])
-        edge_min=min(min_top,min_left,min_bottom,min_right)
-        #print(edge_mean, edge_min)
+        if(edge_mean<Mean_Thresh):
+            mean_top=np.mean(img[y0,x0:x1])
+            mean_left=np.mean(img[y0:y1,x0])
+            mean_bottom=np.mean(img[y1,x0:x1])
+            mean_right=np.mean(img[y0:y1,x1])
+            edge_mean=min(mean_top,mean_left,mean_bottom,mean_right)
+            if(edge_mean==mean_top):
+                y0+=Step_Size
+            elif(edge_mean==mean_left):
+                x0+=Step_Size
+            elif(edge_mean==mean_bottom):
+                y1-=Step_Size
+            elif(edge_mean==mean_right):
+                x1-=Step_Size
+        elif(edge_min<Min_Thresh):
+            min_top=min(img[y0,x0:x1])
+            min_left=min(img[y0:y1,x0])
+            min_bottom=min(img[y1,x0:x1])
+            min_right=min(img[y0:y1,x1])
+            edge_min=min(min_top,min_left,min_bottom,min_right)
+            if(edge_min==min_top):
+                y0+=Step_Size
+            elif(edge_min==min_left):
+                x0+=Step_Size
+            elif(edge_min==min_bottom):
+                y1-=Step_Size
+            elif(edge_min==min_right):
+                x1-=Step_Size
     #end While
     return(img[y0:y1,x0:x1], x0, x1, y0, y1)
 
 
-# Size less than or equal to these threshold will be removed
-# Very Time Consuming!!!
+# Patch with size less than or equal to these threshold will be removed
 # May dramatically improve quality on old printed books
 # But not much on new books
 def DespecklePatch(img, Despeckle_White_Size=5, Despeckle_Black_Size=10):
     
     White_Counter=0
     Black_Counter=0
-
     nlabels, labels, stats, centroids = cv.connectedComponentsWithStats(img, None, None, None, 4)
-
-    areas = stats[1:,cv.CC_STAT_AREA]
-    result = np.zeros((labels.shape), np.uint8)
-
-    for j in range(0, nlabels - 1):
-        if areas[j] > Despeckle_White_Size:
-            result[labels == j + 1] = 255
-        else:
-            White_Counter+=1
-
+    areas  = stats[ : , cv.CC_STAT_AREA]
+    left   = stats[ : , cv.CC_STAT_LEFT]
+    top    = stats[ : , cv.CC_STAT_TOP]
+    width  = stats[ : , cv.CC_STAT_WIDTH]
+    height = stats[ : , cv.CC_STAT_HEIGHT]
+    #small_label=np.where(areas<= Despeckle_White_Size)[0]+1
+    
+    for j in range(1 , nlabels):
+        if areas[j] <= Despeckle_White_Size:
+            White_Counter += 1
+            for x in range(left[j], left[j] + width[j]):
+                for y in range(top[j], top[j] + height[j]):
+                    if labels[y, x] == j:
+                        img[y, x] = 0
+    
     #Now invert color and despeckle black
-    img=255-result
+    img[:]=255-img
     nlabels, labels, stats, centroids = cv.connectedComponentsWithStats(img, None, None, None, 4)
-    areas = stats[1:,cv.CC_STAT_AREA]
-    result = np.zeros((labels.shape), np.uint8)
-
-    for j in range(0, nlabels - 1):
-        if areas[j] > Despeckle_Black_Size:
-            result[labels == j + 1] = 255
-        else:
-            Black_Counter+=1
+    areas  = stats[ : , cv.CC_STAT_AREA]
+    left   = stats[ : , cv.CC_STAT_LEFT]
+    top    = stats[ : , cv.CC_STAT_TOP]
+    width  = stats[ : , cv.CC_STAT_WIDTH]
+    height = stats[ : , cv.CC_STAT_HEIGHT]
+    
+    for j in range(1 , nlabels):
+        if areas[j] <= Despeckle_Black_Size:
+            Black_Counter += 1
+            for x in range(left[j], left[j] + width[j]):
+                for y in range(top[j], top[j] + height[j]):
+                    if labels[y, x] == j:
+                        img[y, x] = 0
 
     #Invert color back to original
-    return(255-result,White_Counter, Black_Counter)
+    return(255-img,White_Counter, Black_Counter)
     #End Despeckle
 
 
 # Fit the image to the given canvas size.
 # May pad or crop edges. 
-# If cropping must be done, avoid cropping black parts by calculating black areas on both sides
+# If cropping must be done, avoid cropping black parts 
+# by calculating black areas on both sides
 def FitToCanvas(img, Tgt_W, Tgt_H, Step_Size=10):
     #Fit to canvas
     #part of white edge being kept during centering, from 0.00 to 1.00
@@ -139,13 +153,13 @@ def FitToCanvas(img, Tgt_W, Tgt_H, Step_Size=10):
     y0 = 0
     x1 = img.shape[:2][1]-1
     y1 = img.shape[:2][0]-1 
-    while(min(img[:,x0]==255)):
+    while(x0<x1 and min(img[:,x0]==255)):
         x0+=Step_Size
-    while(min(img[:,x1]==255)):
+    while(x1>x0 and min(img[:,x1]==255)):
         x1-=Step_Size
-    while(min(img[y0,:]==255)):
+    while(y0<y1 and min(img[y0,:]==255)):
         y0+=Step_Size
-    while(min(img[y1,:]==255)):
+    while(y1>y0 and min(img[y1,:]==255)):
         y1-=Step_Size
     #print(x0,x1,y0,y1)
 
@@ -261,4 +275,5 @@ def CenterImg(img, Center_Edge_Part=100, Max_LR_Pixels=280, Max_TB_Pixels=200):
         TB_Offset=int(TB_Offset)
 
     M = np.float32([[1,0,LR_Offset],[0,1,TB_Offset]])
-    return(cv.warpAffine(img,M,(Tgt_W,Tgt_H),borderValue=(255,255,255)), LR_Offset, TB_Offset)
+    return(cv.warpAffine(img,M,(Tgt_W,Tgt_H),borderValue=(255,255,255)), 
+           LR_Offset, TB_Offset)
