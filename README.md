@@ -9,6 +9,7 @@ This is a Python Script that helps you (hopefully) process scanned documents. It
 This program has the following process:<br />
 1. Rotating the image according to straight line<br />
 2. Cropping edge outside the page<br />
+(Resize the file and apply B&W filter according to the parameter between 2 and 3)
 3. Despeckling small black and white patches<br />
 4. Fitting into fixed page size<br />
 5. Centering.<br />
@@ -17,18 +18,46 @@ Each part is put into a separate function in ```MusicScoreProc.py```. See detail
 ## Important adjustment you need to make:<br />
 
 ### Start and end page:
-- Some books have pictures or title as first few pages. The rotation function will waste time on these. <br />
-- You can avoid it by changing the start page.<br />
-- If you only want to test this program on a few pages, set the end page (page_num) small.<br />
+- Some books have pictures or title as first few pages. The rotation function will waste time on these. 
+- You can avoid it by changing the start page (```start_page```).
+- If you only want to test this program on a few pages, set the end page (```page_num```) small.
 ### File Path:<br />
-- This is obvious. In Windows, just follow the pattern given in the program.<br />
-- I don't have a Mac so you should figure it out yourself.<br />
-- Delete both Temp folders (```File_name_Temp``` and ```File_name```) before you run the same file name. You don't need to delete when using a different file name
+- This is obvious. In Windows, just follow the pattern given in the program.
+- I don't have a Mac so you should figure it out yourself.
+- Delete both Temp folders (```File_name_Temp``` and ```File_name```) before you run the same file name. You don't need to delete when using a different file name.
 ### Page Size:<br />
-- The default ```4000x5400```, ```0.77``` Scaling is designed for 600 ppi scanning of A4 or similar page size.<br />
-- f you are scanning in other resolution or page size, you must change this.<br />
-### Despeckle:<br />
-- As of version 1.1 alpha. Despeckle is very efficient and there is no need to turn off.
+- The default ```4000x5400```, ```0.77``` Scaling is designed for 600 ppi scanning of A4 or similar page size.
+- If you are scanning in other resolution or page size, you must change this.
+
+## Other parameters in the main Python file:<br />
+### ```Verbose```<br />
+Print detailed rotation angle, crop amount, despeckled count and centering offset for each image.
+Default value is ```True```.<br />
+### ```Filter_Thresh```<br />
+Determines at what value (0 to 255) the B&W Threshold cut off. Default value is ```160```.<br />
+### ```Step_Size``` <br />
+Controls the shrinking speed (in pixels) of crop edges. Small ```Step_Size``` will capture small dusts, and will be slow. But is less likely to miss data. Default value is ```10```.<br />
+### ```UseStrongEnhance``` <br />
+Not available until version ```alpha 1.3```. If enabled, generate an extra image that has higher threshold (keeping more black pixels), apply a strong despekle, and combines this image with the original image (Using ```cv.bitwise_and```). <br />
+For some scans, parts of page is blurry, and this feature will partially restore those blurry parts. <br />
+The side effect is that it will generate more black dots. If your scan is not blurry, it is not recommended to turn on. <br />
+This will affect runtime and is by default ```False```. <br />
+
+## Parameters in ```MusicScoreProc.py```:<br />
+### ```RotateByStraightLine```
+- ```start_resolution```: A parameter in ```cv.HoughLinesP```. Controls the start spacing of searching line. Larger value will increase processing speed.
+- ```angle_percision```: A parameter in ```cv.HoughLinesP```. Controls the angle of rotation when searching lines. Larger value will decrease processing speed.
+### ```CropWhite```
+- ```H``` and ```W```: Designated output height and width. Can partially limit the maximum cropping amount, but is not working properly as of version ```alpha 1.2```.
+- ```Mean_Thresh``` and ```Min_Thresh```: Stopping conditions. When both are satisfied, exit the cropping loop. ```Mean_Thresh``` calculates the minimum of average of each 4 sides. ```Min_Thresh``` finds the minimum on all 4 side.
+- ```Step_Size```: The pace at which cropping line is moving.
+### ```DespecklePatch```
+- ```Despeckle_White_Size``` and ```Despeckle_Black_Size```: The maximum size of patches that will be erase. Patches being erased will invert their color. Setting these too large may mistakenly despeckle gap between notes and the staff, or small staccato dots. 
+### ```FitToCanvas```
+- The 3 adjustable parameters do the same thing as in ```CropWhite```. Please refer to that part.
+### ```CenterImg```
+- ```Center_Edge_Part```: Number of parts each edge will be divided into. Mean value will be calculated within each part to estimate the centering amount.
+- ```Max_LR_Pixels``` and ```Max_TB_Pixels```: The length (in pixels) of maximum adjustment when centering. Will not affect anything if adjustment length is less than maximum. 
 
 ## Check out my test file <br />
 
