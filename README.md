@@ -28,6 +28,7 @@ Each part is put into a separate function in ```MusicScoreProc.py```. See detail
 ### Page Size:<br />
 - The default ```4000x5400```, ```0.77``` Scaling is designed for 600 ppi scanning of A4 or similar page size.
 - If you are scanning in other resolution or page size, you must change this.
+- You can also linearly increase the resolution and scaling, which will generate images with higher resolution (But larger file size).
 
 ## Other parameters in the main Python file:<br />
 ### ```Verbose```<br />
