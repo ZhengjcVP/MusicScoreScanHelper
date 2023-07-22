@@ -188,7 +188,7 @@ def FitToCanvas(img, Tgt_W, Tgt_H, Step_Size=10):
             x1+=x0
             x0=0
         else:
-            if(p0!=0 and p1!=0):
+            if(p0!=0 and p1!=0 and ~(np.isnan(p0)) and ~np.isnan(p1)):
                 #print(p0,p1)
                 xsum=x0+x1
                 x0=int(xsum*(p1/(p0+p1)))
@@ -209,7 +209,7 @@ def FitToCanvas(img, Tgt_W, Tgt_H, Step_Size=10):
             y1+=y0
             y0=0
         else:
-            if(p0!=0 and p1!=0):
+            if(p0!=0 and p1!=0 and ~(np.isnan(p0)) and ~np.isnan(p1)):
                 ysum=y0+y1
                 y0=int(ysum*(p1/(p0+p1)))
                 y1=ysum-y0

@@ -9,27 +9,18 @@ from PIL import Image as ImagePIL
 start_time = time.time()
 
 base_path="C:\\Users\\Zhengjc\\Pictures\\Saved Pictures\\"
-#file_path=base_path+"Chopin Score pages\\7. Chopin Prelude Paderewski\\Chopin_prelude_paderewski.pdf"
-#file_path=base_path+"Other Composer\\Tan Dun CAGE\\Tandun_cage.pdf"
-#file_path=base_path+"Beethoven sonata\\2-14 WoO47 Baerenreiter\\Beethoven_Sonata_WoO_47_Op_2-14.pdf"
-#file_path=base_path+"Chopin Score pages\\33. Concerto No.1 Orchestra\\Chopin_concerto_1_orchestra.pdf"
-#file_path=base_path+"Other Composer\\Corigliano STOMP\\Corigliano_STOMP.pdf"
+file_path=base_path+"Chopin Score pages\\7. Chopin Prelude Paderewski\\Chopin_prelude_paderewski.pdf"
+#file_path=base_path+"Chopin Score pages\\1. Chopin Ballades (New)\\Chopin_ballades_20230103.pdf"
+#file_path=base_path+"Other Composer\\Schubert Sonata Wiener\\Schubert_D571_784_wiener_urtext.pdf"
 #file_path=base_path+"Chopin Score pages\\2. Chopin Etudes Op.10 Henle\\Chopin_etude_op10_henle.pdf"
-#file_path="D:\\Documents\\Tencent Files\\3110873827\\FileRecv\\Chopin Works Explained.pdf"
-#file_path=base_path+"Other Composer\\David Del Tredici Piano Album 2\\David_del_tredici_Piano_album_II_Problem.pdf"
-#file_path="D:\\Documents\\Tencent Files\\3110873827\\FileRecv\\Liszt S.399a Fantaisie sur des motifs favoris de l'opéra Lucrezia Borgia.pdf"
-#file_path=base_path+"Other Composer\\Bartok viola concerto\\Bartok_viola_concerto_BH.pdf"
-#file_path=base_path+"Chopin Score pages\\2. Etude Paderewski\\Chopin_studies_padrerewski.pdf"
-#file_path=base_path+"Beethoven sonata\\Concerto No 5 1P\\Beethoven_Concerto_5_1P_BA.pdf"
-file_path=base_path+"Other Composer\\Poulenc Three novelette\\Poulenc_three_novelettes_for_piano.pdf"
 reader = PdfReader(file_path)
-file_name="Poulenc Three novelette"
+file_name="Chopin Prelude Paderewski"
 
 page=reader.pages[0]
-start_page=1
-page_num=138
+start_page=9
+page_num=100
 page_num=min(page_num, len(reader.pages))
- 
+
 print("File Name:"+file_name)
 print("\tProcessing from Page",str(start_page),"to",str(page_num-1))
 print("\t",(page_num-start_page),"Pages Total.")
@@ -47,7 +38,7 @@ os.mkdir(temp_path)
 final_path=str(current_loc)+file_name+"\\"
 os.mkdir(final_path)
 
-#One Image per page
+# One Image per page
 for i in range(page_num):
     for image_file_object in page.images:
         with open(str(count) + image_file_object.name, "wb") as fp:
@@ -62,7 +53,8 @@ for i in range(page_num):
 
 print("\tLoading PDF Complete.")
 
-#Default A4 (or similar) under 600dpi: 4000x5400, 0.77
+# Default A4 (or similar) under 600dpi: 4000x5400, 0.77
+# Change this if you are scanning under different DPI or page size
 Default_A4=True
 if(Default_A4):
     Tgt_W=4000
@@ -70,13 +62,20 @@ if(Default_A4):
     SCL=0.77
     Filter_Thresh=160
 else:
-    Tgt_W=2400
-    Tgt_H=2800
-    SCL=1.2
+    Tgt_W=6000
+    Tgt_H=8100
+    SCL=1.155
     Filter_Thresh=160
 
+# Step Size for crop line. Smaller step size may capture more unwanted dusts,
+# while large step size may miss actual content
 Step_Size=10
-UseDespeckle=True
+
+# Generate a stronger image (Higher Thershold)
+# Then combine with the original image with bitwise and
+# Can provide limited support to partially blurry scans
+# Not recomended for clean scans
+UseStrongEnhance=False
 
 for i in range (start_page,page_num):
     #Rotate
@@ -97,14 +96,23 @@ for i in range (start_page,page_num):
     img = cv.resize(img, (int(img.shape[1]*SCL),
                         int(img.shape[0]*SCL)), interpolation = cv.INTER_CUBIC)
     
-    #Thresholding. 160 by default
-    img[:]=cv.threshold(img, Filter_Thresh, 255, cv.THRESH_BINARY)[1]
+    # Thresholding. 160 by default
+    # Strong Enhance can only provide limited support to partially blurry scans
+    if(UseStrongEnhance):
+        img_strong=cv.threshold(img, Filter_Thresh+40,
+                                 255, cv.THRESH_BINARY)[1]
+        img[:]=cv.threshold(img, Filter_Thresh, 255, cv.THRESH_BINARY)[1]
 
-    #Despeckle. Very time consuming!!!
-    if(UseDespeckle):
-        (img[:], W_Count,B_Count)=DespecklePatch(img, 5, 10)
-        if(Verbose):
-            print("\tBlack/White Patches:", B_Count,W_Count)
+        img_strong[:]=DespecklePatch(img_strong, 5, 50)[0]
+
+        img=cv.bitwise_and(img, img_strong)
+    else:
+        img[:]=cv.threshold(img, Filter_Thresh, 255, cv.THRESH_BINARY)[1]
+
+    #Despeckle.
+    (img[:], W_Count,B_Count)=DespecklePatch(img, 5, 10)
+    if(Verbose):
+        print("\tBlack/White Patches:", B_Count,W_Count)
     
     # Fit the image to the given canvas size.
     # May pad or crop edges. Avoid cropping black parts.
@@ -115,7 +123,7 @@ for i in range (start_page,page_num):
     # Check the thumbnail (black or white) of the resulting nxn matrix.
     # Center the black part as possible.
     # Parts that an edge is divided into
-    (img[:], LROffset, TBOffset)=CenterImg(img, 100, 280, 200)
+    (img[:], LROffset, TBOffset)=CenterImg(img, 100, 280, 0)
     if(Verbose):
         print("\tFinal Offset:",LROffset, TBOffset)
     #All done. Save file
