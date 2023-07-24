@@ -1,5 +1,11 @@
 # MusicScoreScanHelper
 ## Changelog
+
+### v1.4 alpha
+The following changes are made regarding ```RemoveFingeringMain.py```: <br />
+- Previously, thumbnail is changed and these changes are reflected to the original image. This will cause the final image to be inaccurate. Now, no direct changes are made to the thumbnail. The original image is changed, and the thumbnail is updated.
+- The thumbnail will automatically fit the size of screen (Under DPI Aware in Windows)
+- Refresh rate is changed for window display . Previously, the image refreshes every 10 ms. Now, the image only refreshes when a change is made.
 ### v1.3 alpha
 - Version 1.2 is ambiguous and therefore skipped.
 - Added a strong enhance feature to partially restore blurry scans.
@@ -9,6 +15,7 @@
 - Significantly improve the efficiency of rotation and despeckle. Now there's no need to worry about disabling despeckle for runtime.
 - Special thanks to Flrrr https://github.com/Flrrr?tab=repositories for implementing most part of the new despeckle function.
 - Also imported PIL just to change final DPI to 600. This cannot be done with OpenCV.
+
 ## File Structure
 - ```LoadScanPDFMain.py```: The main file of rotating, cropping and filtering music score. See Description below.
 - ```MusicScoreProc.py```: A collection of helper functions including rotation, cropping, despeckle, centering, etc.
@@ -16,6 +23,7 @@
 - ```RemoveFingeringToolkit.py```: A collection of helper functions including removing patches and cleaning objects between lines.
 - ```LoadScanPDFMainMP.py```: Abandonded file. Intended to boost main process by using multi-threading. The result is not efficient.
 - ```CombinePDF.py```: Abandonded file. Intended to combine images into PDF. The resulting file is too large and not efficient.
+
 ## Description for ```LoadScanPDFMain.py```
 This is a Python Script that helps you (hopefully) process scanned documents. It is intended to process musical scores, which has straight lines indicating horizontal directions. It will also work fine for scanned text documents.<br />
 This program has the following process:<br />
@@ -43,6 +51,7 @@ Each part is put into a separate function in ```MusicScoreProc.py```. See detail
 - You can also linearly increase the resolution and scaling, which will generate images with higher resolution (But larger file size).
 
 ## Other parameters in ```LoadScanPDFMain.py```:<br />
+
 ### ```Verbose```<br />
 Print detailed rotation angle, crop amount, despeckled count and centering offset for each image.
 Default value is ```True```.<br />
@@ -51,21 +60,22 @@ Determines at what value (0 to 255) the B&W Threshold cut off. Default value is 
 ### ```Step_Size``` <br />
 Controls the shrinking speed (in pixels) of crop edges. Small ```Step_Size``` will capture small dusts, and will be slow. But is less likely to miss data. Default value is ```10```.<br />
 ### ```UseStrongEnhance``` <br />
-Not available until version ```alpha 1.3```. If enabled, generate an extra image that has higher threshold (keeping more black pixels), apply a strong despekle, and combines this image with the original image (Using ```cv.bitwise_and```). <br />
+If enabled, generate an extra image that has higher threshold (keeping more black pixels), apply a strong despekle, and combines this image with the original image (Using ```cv.bitwise_and```). <br />
 For some scans, parts of page is blurry, and this feature will partially restore those blurry parts. <br />
 The side effect is that it will generate more black dots. If your scan is not blurry, it is not recommended to turn on. <br />
 This will affect runtime and is by default ```False```. <br />
 
 ## Parameters in ```MusicScoreProc.py```:<br />
+
 ### ```RotateByStraightLine```
 - ```start_resolution```: A parameter in ```cv.HoughLinesP```. Controls the start spacing of searching line. Larger value will increase processing speed.
 - ```angle_percision```: A parameter in ```cv.HoughLinesP```. Controls the angle of rotation when searching lines. Larger value will decrease processing speed.
 ### ```CropWhite```
-- ```H``` and ```W```: Designated output height and width. Can partially limit the maximum cropping amount, but is not working properly as of version ```alpha 1.2```.
+- ```H``` and ```W```: Designated output height and width. Can partially limit the maximum cropping amount, but is still not working properly as of version ```alpha 1.4```.
 - ```Mean_Thresh``` and ```Min_Thresh```: Stopping conditions. When both are satisfied, exit the cropping loop. ```Mean_Thresh``` calculates the minimum of average of each 4 sides. ```Min_Thresh``` finds the minimum on all 4 side.
 - ```Step_Size```: The pace at which cropping line is moving.
 ### ```DespecklePatch```
-- ```Despeckle_White_Size``` and ```Despeckle_Black_Size```: The maximum size of patches that will be erase. Patches being erased will invert their color. Setting these too large may mistakenly despeckle gap between notes and the staff, or small staccato dots. 
+- ```Despeckle_White_Size``` and ```Despeckle_Black_Size```: The maximum size of patches that will be erased. Patches being erased will invert their color. Setting these too large may mistakenly despeckle gap between notes and the staff, or small staccato dots. 
 ### ```FitToCanvas```
 - The 3 adjustable parameters do the same thing as in ```CropWhite```. Please refer to that part.
 ### ```CenterImg```
@@ -75,21 +85,19 @@ This will affect runtime and is by default ```False```. <br />
 ## Description for ```RemoveFingeringMain.py```
 This file can help you manually erase fingerings. There are 4 input controls:
 1. Left click and drag to erase non-connected components.
-2. Middle click to erase components between lines. (Will keep the horizontal line and erase everything else)
+2. Middle click to erase components between lines within a square area. (Will keep the horizontal line and erase everything else)
 3. Right click to Undo (Up to 2 steps).
 4. Escape (Esc) to end current image and enter next image.
 
-
 ## Important adjustments you need to make (for ```RemoveFingeringMain.py```):<br />
+
 ### File Path, File Name, and Page Number:<br />
-- These must be adjusted correctly so that the program can read the file. The program cannot automatically read all PNG images in a folder, so page number must be continuous and start and end with existing file.
-### Scaling:<br />
-In line 116 
-```img_before_erase=cv.resize(img, None, fx=0.5, fy=0.5, interpolation=cv.INTER_LINEAR)```
-- The ```fx=0.5, fy=0.5``` part adjust scaling. Scaling closer to 1 will give more accurate result. (Despeckle is not fully working due to unknown issues.)
-- But the scaling cannot exceed your screen resolution. For ```4000x5400``` image. These are not recomended to exceed ```0.5```.
-- You must adjust your scaling in the Windows System to 100% (not 150% or other) to ensure the OpenCV window is displaying correctly.
-- If you happen to own a screen higher than 4K resolution (```3840x2160```). You can adjust scaling to ```1.0``` and there should be no leftover patches.
+- These must be adjusted correctly so that the program can read the file. The program cannot automatically read all PNG images in a folder, so page number must be continuous, and must start and end with existing file.
+
+### Window_Size:<br />
+- As of ```v1.4 alpha```, ```Scaling``` is automatically adjusted according to screen resolution. There is no use in changing it.
+- ```Window_size``` will control the size displayed on screen. ```0.9``` will almost take up the full screen, while ```0.5``` takes 1/4 of the screen (half for both H and W). Value greater than ```1.0``` will not properly display image.
+- I don't know how to check DPI and screen resolution for other OS, so you must change related parts if you are not using Windows.
 
 ## Check out my test file <br />
 
