@@ -1,6 +1,10 @@
 # MusicScoreScanHelper
+🌏 **[中文版](README_zh.md)**
 ## Changelog
-
+### v1.5 alpha
+The following changes are made regarding ```LoadScanPDFMain.py```and```MusicScoreProc.py```: <br />
+- Added an input DPI function. For A4 or 8.5x11in scans that are not 600dpi, adjust this number.
+- Added an alternative hough line detection for ```RotateByStraightLine```. If input resolution is too low, do not scale down. Decrease ```start_resolution``` and ```minLineLength```.
 ### v1.4 alpha
 The following changes are made regarding ```RemoveFingeringMain.py```: <br />
 - Previously, thumbnail is changed and these changes are reflected to the original image. This will cause the final image to be inaccurate. Now, no direct changes are made to the thumbnail. The original image is changed, and the thumbnail is updated.
@@ -10,7 +14,7 @@ The following changes are made regarding ```RemoveFingeringMain.py```: <br />
 - Version 1.2 is ambiguous and therefore skipped.
 - Added a strong enhance feature to partially restore blurry scans.
 - Added a new program ```RemoveFingeringMain.py``` to allow users manually remove fingering.
-- Also 2 abandoned files of testing new functionality. They are uploaded for backup purpose, and are not recomended to use. 
+- Also 2 abandoned files of testing new functionality. They are uploaded for backup purpose, and are not recommended to use. 
 ### v1.1 alpha
 - Significantly improve the efficiency of rotation and despeckle. Now there's no need to worry about disabling despeckle for runtime.
 - Special thanks to Flrrr https://github.com/Flrrr?tab=repositories for implementing most part of the new despeckle function.
@@ -21,8 +25,8 @@ The following changes are made regarding ```RemoveFingeringMain.py```: <br />
 - ```MusicScoreProc.py```: A collection of helper functions including rotation, cropping, despeckle, centering, etc.
 - ```RemoveFingeringMain.py```: The main file of manual fingering removal.
 - ```RemoveFingeringToolkit.py```: A collection of helper functions including removing patches and cleaning objects between lines.
-- ```LoadScanPDFMainMP.py```: Abandonded file. Intended to boost main process by using multi-threading. The result is not efficient.
-- ```CombinePDF.py```: Abandonded file. Intended to combine images into PDF. The resulting file is too large and not efficient.
+- ```LoadScanPDFMainMP.py```: Abandoned file. Intended to boost main process by using multi-threading. The result is not efficient.
+- ```CombinePDF.py```: Abandoned file. Intended to combine images into PDF. The resulting file is too large and not efficient.
 
 ## Description for ```LoadScanPDFMain.py```
 This is a Python Script that helps you (hopefully) process scanned documents. It is intended to process musical scores, which has straight lines indicating horizontal directions. It will also work fine for scanned text documents.<br />
@@ -47,7 +51,8 @@ Each part is put into a separate function in ```MusicScoreProc.py```. See detail
 - Delete both Temp folders (```File_name_Temp``` and ```File_name```) before you run the same file name. You don't need to delete when using a different file name.
 ### Page Size:<br />
 - The default ```4000x5400```, ```0.77``` Scaling is designed for 600 ppi scanning of A4 or similar page size.
-- If you are scanning in other resolution or page size, you must change this.
+- For A4 or similar scans but not in 600dpi, you can just change ```inDPI```. 
+- For non-A4-or-similar scans, you must change the resolution.
 - You can also linearly increase the resolution and scaling, which will generate images with higher resolution (But larger file size).
 
 ## Other parameters in ```LoadScanPDFMain.py```:<br />
