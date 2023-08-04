@@ -8,6 +8,7 @@
 - 可选奇数/偶数页进行旋转
 - 增加预先裁剪功能，针对自动留白边的扫描仪。
 - 其他增加可读性的调整（诸如将```StrongEnhance()```并入```MusicScoreProc.py```，删除无效注释等）
+
 以下改进针对 ```RemoveFingeringToolkit.py```函数: <br />
 - 增加一个 ```GenerateEraseMask()``` 函数。 目前在主程序没有使用。可以检测除了1以外的数字，有效帮助检测指法。将在之后的更新并入主程序。 
 ### v1.4 alpha
