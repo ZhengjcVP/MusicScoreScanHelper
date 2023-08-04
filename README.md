@@ -8,6 +8,7 @@ The following changes are made regarding ```LoadScanPDFMain.py```and```MusicScor
 - Added an rotation option for odd/even page.
 - Added a Pre-crop function for scanners with pre-exsisting white edge.
 - Other changes that improve readability. (E.g. Merging ```StrongEnhance()``` into ```MusicScoreProc.py```, removing some comments etc.)
+
 The following changes are made regarding ```RemoveFingeringToolkit.py```: <br />
 - Added a ```GenerateEraseMask()``` function. Currently not used in the main program. It will mark all numbers except 1, which can help erase fingering. Merging into the main program will happen in a later update.
 ### v1.4 alpha
