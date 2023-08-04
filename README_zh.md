@@ -5,6 +5,11 @@
 以下为 ```LoadScanPDFMain.py```和```MusicScoreProc.py```的变化: <br />
 - 增加输入DPI功能. 对于 A4 或 8.5x11in 的，非 600dpi的纸张, 请调整此数值.
 - 在 ```RotateByStraightLine```增加额外霍夫线变换功能. 如果输入分辨率过低，不执行降分辨率操作，并减小 ```start_resolution``` 和 ```minLineLength```.
+- 可选奇数/偶数页进行旋转
+- 增加预先裁剪功能，针对自动留白边的扫描仪。
+- 其他增加可读性的调整（诸如将```StrongEnhance()```并入```MusicScoreProc.py```，删除无效注释等）
+以下改进针对 ```RemoveFingeringToolkit.py```函数: <br />
+- 增加一个 ```GenerateEraseMask()``` 函数。 目前在主程序没有使用。可以检测除了1以外的数字，有效帮助检测指法。将在之后的更新并入主程序。 
 ### v1.4 alpha
 以下为 ```RemoveFingeringMain.py```的变化: <br />
 - 之前的运算模式为修改缩略图，再基于缩略图的修改调整原始图。这样最终图片会不准确。新算法下，缩略图不被直接更改。直接修改原图，原图的变化反映在缩略图上。
@@ -120,3 +125,7 @@ UseDespeckle=True
 https://imslp.org/wiki/Preludes,_Op.28_(Chopin,_Fr%C3%A9d%C3%A9ric)#IMSLP864159
 - 使用本程序处理并删除指法的1990版Ekier肖邦练习曲和亨乐版肖邦练习曲Op.10也已上传IMSLP。但原始文件不便公开，请使用上方文件测试删指法功能。
   
+同时，为了测试 ```StrongEnhance()```函数，可以使用以下文件： <br/>
+https://www.mediafire.com/file/yp59mbd0y7ca5qy/Chopin_ballades_henle_1976_p10-19.pdf/file
+- 这是一个局部较模糊的扫描件，函数 ```StrongEnhance()```对此效果较好 
+- 考虑到本文件含有指法，只提供10页，足够进行测试目的。

@@ -13,12 +13,12 @@ from win32api import GetSystemMetrics
 start_time = time.time()
 
 base_path="C:\\Users\\Zhengjc\\Pictures\\Saved Pictures\\"
-file_path=base_path+"Other Composer\\Schubert Sonata Wiener\\Schubert D784 Test"
+file_path=base_path+"Chopin Score pages\\7. Prelude Wiener"
 
-file_name="Schubert D784 Test"
+file_name="Chopin Prelude Wiener"
 
 start_page=16
-page_num=19
+page_num=54
 
 print("Folder Name: "+file_name)
 print("\tProcessing from Page",str(start_page),"to",str(page_num-1))
@@ -51,7 +51,7 @@ ScreenH = GetSystemMetrics(1)
 Window_Name="Press Enter for Next Image"
 # Proportion of window on screen. Must be <=1. 
 # 1 is not recomended because the taskbar will cover part of image
-Windows_Size=0.9
+Windows_Size=0.6
 
 def readMouseInput(event, x, y, flags, param):
       
@@ -184,7 +184,10 @@ for i in range(start_page, page_num):
     save_path=final_path+file_name+"_"+str(i)+".png"
     cv.imwrite(save_path, img.astype(int),
                [cv.IMWRITE_PNG_BILEVEL, 1, cv.IMWRITE_PNG_COMPRESSION, 6])
-
+    save_path=final_path+file_name+"_mask_"+str(i)+".png"
+    # mask=GenerateEraseMask(img)
+    # cv.imwrite(save_path, mask.astype(int),
+    #           [cv.IMWRITE_PNG_BILEVEL, 1, cv.IMWRITE_PNG_COMPRESSION, 6])
     # Change DPI. OpenCV doens't have this function, so use PIL
     pimg=ImagePIL.open(save_path)
     pimg.save(save_path, dpi=(600.0, 600.0))

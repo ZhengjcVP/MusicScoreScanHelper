@@ -5,6 +5,11 @@
 The following changes are made regarding ```LoadScanPDFMain.py```and```MusicScoreProc.py```: <br />
 - Added an input DPI function. For A4 or 8.5x11in scans that are not 600dpi, adjust this number.
 - Added an alternative hough line detection for ```RotateByStraightLine```. If input resolution is too low, do not scale down. Decrease ```start_resolution``` and ```minLineLength```.
+- Added an rotation option for odd/even page.
+- Added a Pre-crop function for scanners with pre-exsisting white edge.
+- Other changes that improve readability. (E.g. Merging ```StrongEnhance()``` into ```MusicScoreProc.py```, removing some comments etc.)
+The following changes are made regarding ```RemoveFingeringToolkit.py```: <br />
+- Added a ```GenerateEraseMask()``` function. Currently not used in the main program. It will mark all numbers except 1, which can help erase fingering. Merging into the main program will happen in a later update.
 ### v1.4 alpha
 The following changes are made regarding ```RemoveFingeringMain.py```: <br />
 - Previously, thumbnail is changed and these changes are reflected to the original image. This will cause the final image to be inaccurate. Now, no direct changes are made to the thumbnail. The original image is changed, and the thumbnail is updated.
@@ -121,4 +126,7 @@ UseDespeckle=True
 https://imslp.org/wiki/Preludes,_Op.28_(Chopin,_Fr%C3%A9d%C3%A9ric)#IMSLP864159
 - The Ekier 1990 Chopin Etude and Henle Chopin Etude Op.10 (with fingering removed) are also available on IMSLP (Processed with the scripts here). The original scans of these file may not be made public. You can try the file above to test fingering removing function.
   
-  
+Also, for testing ```StrongEnhance()``` function, use the file below: <br/>
+https://www.mediafire.com/file/yp59mbd0y7ca5qy/Chopin_ballades_henle_1976_p10-19.pdf/file
+- This is a partially blurry scan that ```StrongEnhance()``` works well on. 
+- Since fingerings are also contained in this scan, only 10 pages are provided, which is sufficient for testing purposes.
