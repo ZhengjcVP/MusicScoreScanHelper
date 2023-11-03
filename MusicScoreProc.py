@@ -8,43 +8,71 @@ import math
 # Higher Start Resolution decreases runtime
 # Higher Angle Percision increases runtime
 # Please refer to HoughLineP function for more information
+# text_mode determines the mode for additional rotation.
+# 0 is never use text mode.
+# 1 is use text mode when angle == 0
+# 2 is always use text mode
 
 
-def RotateByStraightLine(img, start_resolution=2, angle_percision=1440):
+def RotateByStraightLine(img, start_resolution=2, angle_percision=1440, text_mode=0):
     (h, w) = img.shape[:2]
     (cX, cY) = (w // 2, h // 2)
-    if (w > 2400):
+    rot_angle = 0
+    if(text_mode!=2):
+        if (w > 2400):
+            temp_img = cv.resize(img, None, fx=0.5, fy=0.5,
+                                 interpolation=cv.INTER_NEAREST)
+            edges = cv.Canny(temp_img, 100, 150, apertureSize=3)
+            lines = cv.HoughLinesP(edges, start_resolution, np.pi/angle_percision,
+                                   100, minLineLength=750, maxLineGap=50)
+        else:
+            edges = cv.Canny(img, 100, 150, apertureSize=3)
+            lines = cv.HoughLinesP(edges, 1, np.pi/angle_percision,
+                                   100, minLineLength=500, maxLineGap=50)
+        angles = [0.0]
+
+        if (lines is None):
+            print("Warning: Hough Line Algorithm can't detect lines")
+        else:
+            for line in lines:
+                x1, y1, x2, y2 = line[0]
+                angle = np.arctan((y2-y1)/(x2-x1))/np.pi*180
+                if (angle < 5 and angle > -5):
+                    angles.append(angle)
+                # cv.line(img,(x1,y1),(x2,y2),(0,255,0),2)
+        # cv.imwrite(temp_path+file_name+"_"+str(i)+".jpg",img)
+        # End Generate Hough Line
+
+        # Rotate
+        rot_angle = np.median(angles)
+
+    if ((rot_angle == 0 and text_mode == 1) or text_mode == 2):
+        # Additional rotate when angle == 0 (For texts)
+        # Generate smaller hough lines
+        if(text_mode == 1):
+            print("\tAngle=0, preforming additional detection")
+        
         temp_img = cv.resize(img, None, fx=0.5, fy=0.5,
-                             interpolation=cv.INTER_NEAREST)
+                                 interpolation=cv.INTER_NEAREST)
         edges = cv.Canny(temp_img, 100, 150, apertureSize=3)
-        lines = cv.HoughLinesP(edges, start_resolution, np.pi/angle_percision,
-                               100, minLineLength=750, maxLineGap=50)
-    else:
-        edges = cv.Canny(img, 100, 150, apertureSize=3)
-        lines = cv.HoughLinesP(edges, 1, np.pi/angle_percision,
-                               100, minLineLength=500, maxLineGap=50)
-    angles = [0.0]
+        lines = cv.HoughLinesP(edges, 1, np.pi/(angle_percision*2),
+                                100, minLineLength=6, maxLineGap=20)
+        angles = [0.0]
 
-    if (lines is None):
-        print("Warning: Hough Line Algorithm can't detect lines")
-    else:
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
-            angle = np.arctan((y2-y1)/(x2-x1))/np.pi*180
-            if (angle < 5 and angle > -5):
-                angles.append(angle)
-            # cv.line(img,(x1,y1),(x2,y2),(0,255,0),2)
-    # cv.imwrite(temp_path+file_name+"_"+str(i)+".jpg",img)
-    # End Generate Hough Line
-
-    # Rotate
-    rot_angle = np.median(angles)
+        #Find median Again
+        if (lines is None):
+            print("Warning: Additional Hough Line Algorithm can't detect lines")
+        else:
+            for line in lines:
+                x1, y1, x2, y2 = line[0]
+                angle = np.arctan((y2-y1)/(x2-x1))/np.pi*180
+                if (angle < 5 and angle > -5 and angle != 0):
+                    angles.append(angle)
+        rot_angle = np.median(angles)
     if (rot_angle != 0):
-
         M = cv.getRotationMatrix2D((cX, cY), rot_angle, 1.0)
         img = cv.warpAffine(img, M, (w, h),
-                            flags=cv.INTER_CUBIC, borderValue=(127, 127, 127))
-        # cv.imwrite(temp_path+file_name+"_"+str(i)+".jpg",img)
+                            flags=cv.INTER_CUBIC, borderValue=(255, 255, 255))
     return (img, rot_angle)
     # end if
     # End Rotate

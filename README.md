@@ -1,6 +1,15 @@
 # MusicScoreScanHelper
 🌏 **[中文版](README_zh.md)**
 ## Changelog
+### v1.6 alpha
+Added ```reset_dpi.py``` program, which can despeckle and reset dpi 0/1 bitmap PNG files in batch.<br />
+The following changes are made regarding ```LoadScanPDFMain.py```and```MusicScoreProc.py```: <br />
+- Check for Temp folder and Output folder before running program, making deleting them unecessary. If files in folders don't meet requirements, exit the program with error message. The process is listed below:<br />
+1. When Temp folder exists, and contians all ```.jpg```files needed (actually only detecting first and last file), do not read PDF.
+2. If either folder exists, and is empty, don't create the folder again.
+3. If either folder exists, but does not meet requirement above, exit with error.
+- Added a operating mode in ```RotateByStraightLine``` function。```2```is text mode, which is slower, but better for pure text. ```0```is the default mode in previous versions. ```1```is automatic, will run text mode if angle is ```0```after default mode. It is recommended to use```2``` after confirming pages with texts. It is not recommended to use```1```.
+- Default resolution is no longer ```4000x5400```, and is changed to```4500x6000```. This can fit larger scores, but will leave wider margins for regular scores. Added a High Resolution preset，in which DPI and resolution are ```1.5```times the new default. (Therefore both can fit to the same PDF) This is better for full score, but will result in larger file size. There's no need to use such preset for regular piano score.
 ### v1.5 alpha
 The following changes are made regarding ```LoadScanPDFMain.py```and```MusicScoreProc.py```: <br />
 - Added an input DPI function. For A4 or 8.5x11in scans that are not 600dpi, adjust this number.
@@ -54,9 +63,9 @@ Each part is put into a separate function in ```MusicScoreProc.py```. See detail
 ### File Path:<br />
 - This is obvious. In Windows, just follow the pattern given in the program.
 - I don't have a Mac so you should figure it out yourself.
-- Delete both Temp folders (```File_name_Temp``` and ```File_name```) before you run the same file name. You don't need to delete when using a different file name.
+- Ensure the input folder ```File_name_Temp``` contains all files needed, and output folder ```File_name``` is empty. (If any of the folders exist) before you run the same file name. If an error is thrown, check the error message, or delete both folders. You don't need to delete when using a different file name.
 ### Page Size:<br />
-- The default ```4000x5400```, ```0.77``` Scaling is designed for 600 ppi scanning of A4 or similar page size.
+- The default ```4500x6000```, ```0.8``` Scaling is designed for 600 ppi scanning of 9x12 inch music score. This is larger than A4 or American 8.5x11 inch. For most piano scores and some full scores, this will leave larger margin. But for some large full score, this is just the right setting. 
 - For A4 or similar scans but not in 600dpi, you can just change ```inDPI```. 
 - For non-A4-or-similar scans, you must change the resolution.
 - You can also linearly increase the resolution and scaling, which will generate images with higher resolution (But larger file size).
