@@ -10,20 +10,40 @@ from PIL import Image as ImagePIL
 start_time = time.time()
 
 base_path = "C:\\Users\\Zhengjc\\Pictures\\Saved Pictures\\"
-# file_path=base_path+"Chopin Score pages\\7. Chopin Prelude Paderewski\\Chopin_prelude_paderewski.pdf"
-file_path= base_path+"Other Composer\\Brahms\\Sonata HN\\Unused\\SB_CPBA_BS1HNSupp.pdf"
+#file_path=base_path+"Chopin Score pages\\7. Chopin Prelude Paderewski\\Chopin_prelude_paderewski.pdf"
+file_path= base_path+"Beethoven sonata\\Op120 Diabelli\\Beethoven_op_120_diabelli.pdf"
+if (not os.path.isfile(file_path)):
+    print("======================")
+    print("\tInput PDF does not exist.")
+    print("\t Please check the file:\n\t"+file_path)
+    print("======================")
+    raise ValueError('Input PDF does not exist.')
 reader = PdfReader(file_path)
-file_name = "SB CPBA BS1HN Supp"
+file_name = "Op120 Diabelli"
 
 page = reader.pages[0]
-# 0 = Default rotation 
-# 1 = Auto
-# 2 = Text rotation (slower)
+# -1 = No rotation
+#  0 = Default rotation 
+#  1 = Auto
+#  2 = Text rotation (slower)
 RotationMode = 0
 
-start_page = 0
-page_num = 8
+start_page = 34
+page_num = 64
 page_num = min(page_num, len(reader.pages))
+
+Use_start_end = True
+
+page_range = []
+if (Use_start_end):
+    page_range = range(start_page, page_num)
+else:
+    # Customize page number here.
+    page_range = [1, 23, 24]
+
+    # Change start and end, for detecting input file
+    start_page = page_range[0]
+    page_num = page_range[-1]
 
 print("File Name:"+file_name)
 print("\tProcessing from Page", str(start_page), "to", str(page_num-1))
@@ -111,48 +131,52 @@ if (Default_A4):
     SCL = 0.77*DPIRatio
     Filter_Thresh = 160
     outDPI = 600.00
-    dspBlackAmt = 12
-    dspWhiteAmt = 18
+    dspBlackAmt = 2 #18
+    dspWhiteAmt = 16 #10
 elif (Default_3to4):
     Tgt_W = 4500
     Tgt_H = 6000
     DPIRatio = 600/inDPI
     SCL = DPIRatio*0.8
-    Filter_Thresh = 160
+    Filter_Thresh = 180
     outDPI = 600.00
     dspBlackAmt = 18
-    dspWhiteAmt = 12
+    dspWhiteAmt = 9
 elif (HiRes_3to4):
     Tgt_W = 6750
     Tgt_H = 9000
     DPIRatio = 600/inDPI
     SCL = DPIRatio*1.2
-    Filter_Thresh = 160
+    Filter_Thresh = 170
     outDPI = 900.00 
-    dspBlackAmt = 32
-    dspWhiteAmt = 20   
+    dspBlackAmt = 20
+    dspWhiteAmt = 10
 else:
-    Tgt_W = 8000
-    Tgt_H = 6000
+    Tgt_W = 6750
+    Tgt_H = 9000
     DPIRatio = 600/inDPI
-    SCL = DPIRatio*0.8
-    Filter_Thresh = 110
+    SCL = DPIRatio*1.0
+    Filter_Thresh = 160
+    outDPI = 600.00 
+    dspBlackAmt = 0
+    dspWhiteAmt = 0
 # Filp or rotate page
 Odd_page_flip = False
 Even_page_flip = False
 
 # Crop this amount (pixels) before using the CropWhite() command
 # set to 0 for no cropping
-PreCrop_Amt = 140
+PreCrop_Amt = 0
+DoCrop = True
 
 # Customize pre-cropping for 
-Custom_PreCrop = False
+Custom_PreCrop = True
 # If true, even page will have precrop LR reversed.
 Even_page_reverse_precrop = True
-PreCrop_T = 200
-PreCrop_L = 50
-PreCrop_B = 240
-PreCrop_R = 320
+PreCrop_T = 180
+PreCrop_L = 240
+PreCrop_B = 80
+PreCrop_R = 15
 
 # Step Size for crop line. Smaller step size may capture more unwanted dusts,
 # while large step size may miss actual content
@@ -162,7 +186,9 @@ Step_Size = 10
 # Then combine with the original image with bitwise and
 # Can provide limited support to partially blurry scans
 # Not recomended for clean scans
-UseStrongEnhance = True
+UseStrongEnhance = False
+Use2LvFilter = False
+SE_Thresh = 230
 def printParams():
     print("Parameters:")
     print("\tDefault_A4:", Default_A4)
@@ -184,7 +210,7 @@ def printParams():
 printParams()
 #file_name1="mozart_sonata_wiener_smph_book1_Page_"
 #file_name2="_Image_0001.jpg"
-for i in range(start_page, page_num):
+for i in page_range:
 
     # Alternative read file
     # if(i<=9):
@@ -205,6 +231,19 @@ for i in range(start_page, page_num):
     img_W = img.shape[:2][0]
     img_H = img.shape[:2][1]
 
+    # Flip horizontal then vertical. Equivalent to 180deg rotate.
+    if ((Odd_page_flip and i % 2 == 1) or (Even_page_flip and i % 2 == 0)):
+        if (Verbose):
+            print("\tRotated 180 degrees")
+        img = cv.flip(img, 0)
+        img = cv.flip(img, 1)
+
+    # Rotate
+    if(RotationMode != -1):
+        (img[:], rot_angle) = RotateByStraightLine(img, 2, 1440, RotationMode)
+        if (Verbose):
+            print("\tAngle:", rot_angle)
+#
     # Crop before proceeding
     if(Custom_PreCrop):
         # Even page will have reflected precrop from odd page
@@ -222,22 +261,18 @@ for i in range(start_page, page_num):
     # Re-calculate height and width after pre cropping.    
     img_W = img.shape[:2][0]
     img_H = img.shape[:2][1]
-    # Flip horizontal then vertical. Equivalent to 180deg rotate.
-    if ((Odd_page_flip and i % 2 == 1) or (Even_page_flip and i % 2 == 0)):
-        if (Verbose):
-            print("\tRotated 180 degrees")
-        img = cv.flip(img, 0)
-        img = cv.flip(img, 1)
-
-    # Rotate
-    (img[:], rot_angle) = RotateByStraightLine(img, 2, 1440, RotationMode)
-    if (Verbose):
-        print("\tAngle:", rot_angle)
 
     # Crop
-    (img, x0, x1, y0, y1) = CropWhite(img, Tgt_H, Tgt_W, 200, 120, 10)
-    if (Verbose):
-        print("\tCrop Edge:", x0, x1, y0, y1)
+    if(DoCrop):
+        (img, x0, x1, y0, y1) = CropWhite(img, Tgt_H, Tgt_W, 200, 120, 10)
+        if (Verbose):
+            print("\tCrop Edge:", x0, x1, y0, y1)
+    # x0=0
+    # y0=0
+    # x1=min(6999, img_W) 
+    # y1=min(5399, img_H)
+    # img = img[0:x1, 0:y1]
+
 
     # Resize
     New_H = int(img.shape[1]*SCL)
@@ -247,14 +282,17 @@ for i in range(start_page, page_num):
     # Thresholding. 160 by default
     # Strong Enhance can only provide limited support to partially blurry scans
     if (UseStrongEnhance):
-        img = StrongEnhance(img, Filter_Thresh, 175, 80)
+        img = StrongEnhance(img, Filter_Thresh, SE_Thresh, 80)
+    elif (Use2LvFilter):
+        img = TwoLvFilter(img, Filter_Thresh, SE_Thresh, dspBlackAmt, dspWhiteAmt, True)
     else:
         img[:] = cv.threshold(img, Filter_Thresh, 255, cv.THRESH_BINARY)[1]
 
     # Despeckle.
-    (img[:], W_Count, B_Count) = DespecklePatch(img, dspWhiteAmt, dspBlackAmt)
-    if (Verbose):
-        print("\tBlack/White Patches:", B_Count, W_Count)
+    if(not Use2LvFilter):
+        (img[:], W_Count, B_Count) = DespecklePatch(img, dspWhiteAmt, dspBlackAmt)
+        if (Verbose):
+            print("\tBlack/White Patches:", B_Count, W_Count)
 
     # Fit the image to the given canvas size.
     # May pad or crop edges. Avoid cropping black parts.

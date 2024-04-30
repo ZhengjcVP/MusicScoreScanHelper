@@ -1,6 +1,9 @@
 # MusicScoreScanHelper
 🌏 **[中文版](README_zh.md)**
 ## Changelog
+### v1.7 alpha
+Added 2 Level Mode ```TwoLvFilter()``` in file ```MusicScoreProc.py```, which can better process grayscale printings. The principles are similar to ```StrongEnhance()```.<br />
+Added corresponding function in the main program ```LoadScanPDFMain.py```.<br />
 ### v1.6 alpha
 Added ```reset_dpi.py``` program, which can despeckle and reset dpi 0/1 bitmap PNG files in batch.<br />
 The following changes are made regarding ```LoadScanPDFMain.py```and```MusicScoreProc.py```: <br />

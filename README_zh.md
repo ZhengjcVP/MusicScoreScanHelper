@@ -1,6 +1,9 @@
 # MusicScoreScanHelper
 🌏 **[English](README.md)**
 ## 更新日志
+### v1.7 alpha
+在 ```MusicScoreProc.py```中增加2层处理模式```TwoLvFilter()```，可以更好适应多层印刷图片。原理类似```StrongEnhance()```<br />
+在主程序 ```LoadScanPDFMain.py```加入对应功能<br />
 ### v1.6 alpha
 增加了 ```reset_dpi.py```程序。可以批量对01位图PNG文件重置DPI以及除尘。<br />
 以下为 ```LoadScanPDFMain.py```和```MusicScoreProc.py```的变化: <br />

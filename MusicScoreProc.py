@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
 import math
+import random
 
 # Rotate arrcording to angle of horizontal line.
 # Should not exceed +- 5 degrees
@@ -149,14 +150,14 @@ def DespecklePatch(img, Despeckle_White_Size=5, Despeckle_Black_Size=10):
     width = stats[:, cv.CC_STAT_WIDTH]
     height = stats[:, cv.CC_STAT_HEIGHT]
     # small_label=np.where(areas<= Despeckle_White_Size)[0]+1
-
-    for j in range(1, nlabels):
-        if areas[j] <= Despeckle_White_Size:
-            White_Counter += 1
-            for x in range(left[j], left[j] + width[j]):
-                for y in range(top[j], top[j] + height[j]):
-                    if labels[y, x] == j:
-                        img[y, x] = 0
+    if(Despeckle_White_Size!=0):
+        for j in range(1, nlabels):
+            if areas[j] <= Despeckle_White_Size:
+                White_Counter += 1
+                for x in range(left[j], left[j] + width[j]):
+                    for y in range(top[j], top[j] + height[j]):
+                        if labels[y, x] == j:
+                            img[y, x] = 0
 
     # Now invert color and despeckle black
     img[:] = 255-img
@@ -168,13 +169,14 @@ def DespecklePatch(img, Despeckle_White_Size=5, Despeckle_Black_Size=10):
     width = stats[:, cv.CC_STAT_WIDTH]
     height = stats[:, cv.CC_STAT_HEIGHT]
 
-    for j in range(1, nlabels):
-        if areas[j] <= Despeckle_Black_Size:
-            Black_Counter += 1
-            for x in range(left[j], left[j] + width[j]):
-                for y in range(top[j], top[j] + height[j]):
-                    if labels[y, x] == j:
-                        img[y, x] = 0
+    if(Despeckle_Black_Size!=0):
+        for j in range(1, nlabels):
+            if areas[j] <= Despeckle_Black_Size:
+                Black_Counter += 1
+                for x in range(left[j], left[j] + width[j]):
+                    for y in range(top[j], top[j] + height[j]):
+                        if labels[y, x] == j:
+                            img[y, x] = 0
 
     # Invert color back to original
     return (255-img, White_Counter, Black_Counter)
@@ -193,6 +195,42 @@ def StrongEnhance(img, Normal_Thresh=160, Strong_Thresh=200, Despeckle_Black_Siz
     img[:] = cv.threshold(img, Normal_Thresh, 255, cv.THRESH_BINARY)[1]
 
     return cv.bitwise_and(img, img_strong)
+
+# Similar to StrongEnhance()
+# But use checkboard instead of stronger despeckle to merge
+# Also integrates despeckle, so don't use despeckle after this
+# Convolution (if turned on) only applies to high level. 
+def TwoLvFilter(img, Normal_Thresh=160, Strong_Thresh=200, 
+                Despeckle_Black_Size = 16, Despeckle_White_Size = 8, Convolve = False):
+    img_low = cv.threshold(img, Normal_Thresh, 255, cv.THRESH_BINARY)[1]
+    conv_img = img
+    if(Convolve):
+        kernel = np.array([[0.1, 0.15, 0.1], [0.15, 0, 0.15], [0.1, 0.15, 0.1]]) 
+        conv_img = cv.filter2D(img, -1, kernel, borderType=cv.BORDER_CONSTANT)
+    img_high = cv.threshold(conv_img, Strong_Thresh, 255, cv.THRESH_BINARY)[1]
+    img_low = DespecklePatch(img_low, Despeckle_White_Size, Despeckle_Black_Size)[0]
+    img_high = DespecklePatch(img_high, Despeckle_White_Size, Despeckle_Black_Size)[0]
+    img_high = RemoveCheckBoard(img_high)
+
+    return cv.bitwise_and(img_high, img_low)
+
+# Remove half of the pixels: 
+# mode = 0: remove interlaced pixels like a chessboard
+# mode = 1: remove every pixel randomly if a random number is less than randparam.
+def RemoveCheckBoard(img, mode = 0, randparam = 0.5):
+    w, h = img.shape
+    doRemove = False
+    for i in range(w):
+        for j in range(h):
+            if (mode == 0):
+                if(doRemove):
+                    img[i, j] = 1
+                doRemove = not doRemove
+            elif (mode == 1):
+                if(random.random()<randparam):
+                    img[i, j] = 1
+
+    return img
 
 # Fit the image to the given canvas size.
 # May pad or crop edges.
